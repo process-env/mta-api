@@ -1,4 +1,4 @@
-# MTA Express API (built from your old MTA logic)
+# MTA Express API 
 
 A tiny Express server that exposes NYC Subway GTFS-realtime data + static stops/routes from your original study files.
 
@@ -13,10 +13,6 @@ A tiny Express server that exposes NYC Subway GTFS-realtime data + static stops/
 - `GET /v1/feed/:groupId` – parsed trip updates for a group (e.g., `NQRW`)
 - `GET /v1/arrivals/:groupId/:stopId` – parsed arrival by group and stopId (e.g. `/v1/arrivals/1234567/608S`)
 
-Example:
-```
-curl -H "x-api-key: $MTA_API_KEY" "http://localhost:3000/v1/feed/NQRW"
-```
 
 ### `GET /v1/routes/:routeId/stops`
 
