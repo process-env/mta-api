@@ -1,12 +1,12 @@
-const ROUTE_EQUIV: Record<string, string> = {
+const ROUTE_EQUIV = {
   '5X': '5',
   '6X': '6',
   '7X': '7',
-  GS: 'S',
-  FS: 'S',
+  'GS': 'S',
+  'FS': 'S',
 };
 
-const ROUTE_RULES: Record<string, Array<{ prefix?: string; min?: number; max?: number }>> = {
+const ROUTE_RULES = {
   '1': [
     { prefix: '', min: 101, max: 199 },
   ],
@@ -30,7 +30,7 @@ const ROUTE_RULES: Record<string, Array<{ prefix?: string; min?: number; max?: n
   '7': [
     { prefix: '', min: 701, max: 799 },
   ],
-  S: [
+  'S': [
     { prefix: '', min: 901, max: 999 },
   ],
   N: [
@@ -50,27 +50,27 @@ const ROUTE_RULES: Record<string, Array<{ prefix?: string; min?: number; max?: n
   ],
 };
 
-const ROUTE_TOKENS_CACHE = new Map<string, string[]>();
+const ROUTE_TOKENS_CACHE = new Map();
 
-function tokenizeRouteString(str: string): string[] {
+function tokenizeRouteString(str) {
   if (!str) return [];
   const key = str.toUpperCase();
-  if (ROUTE_TOKENS_CACHE.has(key)) return ROUTE_TOKENS_CACHE.get(key)!;
+  if (ROUTE_TOKENS_CACHE.has(key)) return ROUTE_TOKENS_CACHE.get(key);
   const tokens = key.split(/[^A-Z0-9]+/).filter(Boolean);
   ROUTE_TOKENS_CACHE.set(key, tokens);
   return tokens;
 }
 
-function normalizeRoute(routeId: string | null | undefined): string | null {
+function normalizeRoute(routeId) {
   if (!routeId) return null;
   const upper = routeId.toUpperCase();
   return ROUTE_EQUIV[upper] || upper;
 }
 
-function extractBaseCode(stop: StopLike | null | undefined): { code: string; prefix: string; number: number | null } {
+function extractBaseCode(stop) {
   if (!stop) return { code: '', prefix: '', number: null };
-  const parent = (stop.parent ?? '').toString();
-  const ownId = (stop.id ?? '').toString();
+  const parent = (stop.parent || '').toString();
+  const ownId = (stop.id || '').toString();
   const raw = parent || ownId;
   if (!raw) return { code: '', prefix: '', number: null };
   const code = raw.toUpperCase();
@@ -81,40 +81,31 @@ function extractBaseCode(stop: StopLike | null | undefined): { code: string; pre
   return { code, prefix, number };
 }
 
-function codeMatchesRule(
-  rule: { prefix?: string; min?: number; max?: number },
-  prefix: string,
-  number: number | null,
-): boolean {
+function codeMatchesRule(rule, prefix, number) {
   if (rule.prefix && rule.prefix !== prefix) return false;
   if (rule.min != null && (number == null || number < rule.min)) return false;
   if (rule.max != null && (number == null || number > rule.max)) return false;
   return true;
 }
 
-function codeTokens(code: string): string[] {
-  return [...code.matchAll(/([A-Z]+|\d+)/g)].map(match => match[1]);
+function codeTokens(code) {
+  return [...code.matchAll(/([A-Z]+|\d+)/g)].map(m => m[1]);
 }
 
-export interface StopLike {
-  id: string;
-  routes?: string | null;
-  parent?: string | null;
-}
-
-export function stopServesRoute(stop: StopLike | null | undefined, routeId: string): boolean {
+export function stopServesRoute(stop, routeId) {
   const normalized = normalizeRoute(routeId);
   if (!normalized) return false;
 
-  const directTokens = tokenizeRouteString(stop?.routes ?? '');
+  const directTokens = tokenizeRouteString(stop?.routes || '');
   if (directTokens.includes(normalized)) return true;
 
-  const { code, prefix, number } = extractBaseCode(stop ?? null);
+  const { code, prefix, number } = extractBaseCode(stop);
   const rules = ROUTE_RULES[normalized];
   if (rules?.some(rule => codeMatchesRule(rule, prefix, number))) {
     return true;
   }
 
+  // Fallback: if we have no explicit rules, check code tokens for the route ID.
   if (!rules) {
     const tokens = codeTokens(code);
     for (const token of tokens) {
@@ -125,8 +116,9 @@ export function stopServesRoute(stop: StopLike | null | undefined, routeId: stri
   return false;
 }
 
-export function filterStopsByRoute<T extends StopLike>(stops: readonly T[], routeId: string): T[] {
+export function filterStopsByRoute(stops, routeId) {
   const normalized = normalizeRoute(routeId);
   if (!normalized) return [];
   return stops.filter(stop => stopServesRoute(stop, normalized));
 }
+
