@@ -1,0 +1,39 @@
+{
+  "groupId": "1234567",
+  "timestamp": 1712697600,
+  "isSample": true,
+  "trips": [
+    {
+      "tripId": "sample-trip-1",
+      "routeId": "1",
+      "stopTimeUpdates": [
+        {
+          "stopId": "127S",
+          "arrivalEpoch": 1712697900,
+          "headsign": "South Ferry"
+        },
+        {
+          "stopId": "127N",
+          "arrivalEpoch": 1712698050,
+          "headsign": "Van Cortlandt Park-242 St"
+        }
+      ]
+    },
+    {
+      "tripId": "sample-trip-2",
+      "routeId": "N",
+      "stopTimeUpdates": [
+        {
+          "stopId": "R16N",
+          "arrivalEpoch": 1712697960,
+          "headsign": "Astoria-Ditmars Blvd"
+        },
+        {
+          "stopId": "R16S",
+          "arrivalEpoch": 1712698080,
+          "headsign": "Coney Island-Stillwell Av"
+        }
+      ]
+    }
+  ]
+}

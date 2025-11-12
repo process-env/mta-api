@@ -1,82 +1,45 @@
-# MTA Express API 
+# MTA Express Next
 
-A tiny Express server that exposes NYC Subway GTFS-realtime data + static stops/routes from your original study files.
+This project ports the MTA Express API into a Next.js 15 application with a small UI that emulates the classic black station signage with colored route bullets. It includes REST endpoints for routes, stops, GTFS feed groups, and a React Flow powered station preview.
 
-## Endpoints
-
-- `GET /health` – quick check
-- `GET /v1/routes` – list routes from `data/routes.txt`
-- `GET /v1/routes/:routeId/stops` – stops serving a specific route (alphabetically sorted)
-- `GET /v1/stops?query=Times%20Sq&route=N` – search stops by name/ID; optionally filter by a route letter
-- `GET /v1/stops/:stopId` – single stop by ID (e.g., `R16N`)
-- `GET /v1/feed` – list available feed *groups* (`ACE`, `BDFM`, `G`, `JZ`, `NQRW`, `L`, `SI`, `1234567`)
-- `GET /v1/feed/:groupId` – parsed trip updates for a group (e.g., `NQRW`)
-- `GET /v1/arrivals/:groupId/:stopId` – parsed arrival by group and stopId (e.g. `/v1/arrivals/1234567/608S`)
-
-
-### `GET /v1/routes/:routeId/stops`
-
-Returns the list of stops that serve the requested `routeId`. Replace `:routeId` in the URL with the service you care about (for example, `N`, `5`, or `Q`). The results are sorted alphabetically by stop name (and by stop ID as a tiebreaker). A typical response looks like:
-
-```json
-[
-  {
-    "id": "R16N",
-    "name": "Times Sq-42 St",
-    "lat": 40.75529,
-    "lon": -73.987495,
-    "routes": "N Q R W",
-    "parent": "R16"
-  }
-]
-```
-
-Example requests:
+## Getting started
 
 ```bash
-curl "http://localhost:3000/v1/routes/N/stops" | jq '.[0]'
-curl "http://localhost:3000/v1/routes/5/stops" | jq '.[0]'
-curl "http://localhost:3000/v1/routes/Q/stops" | jq '.[0]'
-```
-
-If you accidentally paste the placeholder (`/v1/routes/:routeId/stops/N`) from the docs, the server will treat the final segment (`N` in this example) as the route ID so you still receive data.
-
-If no stops match the provided `routeId`, an empty array is returned. Requesting the endpoint without a `routeId` yields a `400` error response.
-
-> NOTE: The static stop file bundled with this project does not enumerate per-stop route memberships. The server infers them from GTFS stop identifiers, covering the numbered services (`1`–`7`, shuttle variants) and the Broadway/Queensbridge/Brighton trunk (`N`, `Q`, `R`, `W`). Routes outside those heuristics will return an empty list until richer source data is provided.
-
-> NOTE: If you set `MTA_API_KEY` in `.env`, you don't need to pass the header; the server will include it automatically.
-
-## Setup
-
-```bash
-npm i
+pnpm install
 cp .env.example .env
-# put your real MTA key into .env
-npm run start
-# or for hot reload (Node 22+)
-npm run dev
+# Optionally edit .env to provide MTA_API_KEY
+pnpm dev
 ```
 
-Open: http://localhost:3000/health
+Then open [http://localhost:3000](http://localhost:3000) to use the search UI.
 
-## Config
+## Environment variables
 
-- `MTA_API_KEY` – your MTA GTFS-Realtime key (https://api.mta.info/)
-- `PORT` – default 3000
-- `CACHE_TTL_MS` – default 15000ms; per-feed in-memory cache
+| Variable | Description |
+| --- | --- |
+| `MTA_API_KEY` | Optional key for live GTFS data. Without it, a bundled sample feed keeps arrivals working. |
+| `FEED_BASE_URL` | Override the GTFS API host (default `https://api.mta.info/`). |
+| `CACHE_TTL_MS` | Feed cache TTL in milliseconds (default `15000`). |
 
-## About the data
+An `.env.example` file is provided with placeholders.
 
-- `data/gtfs-realtime.proto` – schema used by protobufjs
-- `data/routes.txt`, `data/stops.txt` – from your original repo; parsed via `csv-parse`
-- The feed parser returns a simplified JSON for each `tripUpdate` with stop names resolved from your stop dictionary.
+## Scripts
 
-## Extending
+- `pnpm dev` – run Next.js in development mode.
+- `pnpm build` – create an optimized production build.
+- `pnpm start` – run the production server.
+- `pnpm lint` – run `next lint`.
+- `pnpm typecheck` – run TypeScript in no-emit mode.
 
-- Add `GET /v1/trip/:tripId` by filtering the `fetchFeed()` result
-- Add `GET /v1/arrivals/:stopId` by reversing the mapping (`stopId` -> next arrivals)
-- Persist cache in Redis if you deploy to multiple instances
-```
+## API overview
 
-# mta-api
+- `GET /api/health` – quick liveness check.
+- `GET /api/v1/routes` – list of subway routes from `data/routes.txt`.
+- `GET /api/v1/routes/:routeId/stops` – stops inferred to serve a route (supports compatibility trailing IDs).
+- `GET /api/v1/stops?query=Times%20Sq&route=N` – fuzzy stop search with optional route filter.
+- `GET /api/v1/stops/:stopId` – stop details by GTFS ID (returns `[]` when unknown).
+- `GET /api/v1/feed` – available GTFS feed groups.
+- `GET /api/v1/feed/:groupId` – cached realtime feed data with sample fallback.
+- `GET /api/v1/arrivals/:groupId/:stopId` – next arrivals derived from the feed.
+
+All endpoints respond with JSON.
