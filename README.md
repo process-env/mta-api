@@ -7,7 +7,7 @@ https://github.com/your-org/mta-api
 
 ## Features
 
-- **Next.js 15 Canary + React 18** – modern app directory architecture with server components.
+- **Next.js 15 Canary + React 19 RC** – modern app directory architecture with server components.
 - **React Flow canvas** – interactive rendering of each subway line with minimap, controls, and animated edges.
 - **Route-aware station filtering** – heuristics derived from the GTFS stop identifiers to approximate which stations serve a
   given route when the static data does not list memberships explicitly.
@@ -23,7 +23,8 @@ npm run dev
 
 Then open http://localhost:3000 in your browser.
 
-> **Note:** The canary releases used here may require Node.js 18.17 or newer.
+> **Note:** The canary releases used here may require Node.js 18.17 or newer. The project ships an `.npmrc` that disables
+> strict peer dependency resolution so the React 19 release candidates can co-exist with the current React Flow peer range.
 
 ## Project structure
 
